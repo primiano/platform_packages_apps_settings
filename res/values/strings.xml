@@ -1703,6 +1703,10 @@
     <string name="ringtone_title">Phone ringtone</string>
     <!-- Sound settings screen, setting option summary text -->
     <string name="ringtone_summary">""</string>
+    <!-- Sound settings device title -->
+    <string name="audio_device_title">Audio device</string>
+    <string name="audio_device_title_summary">Select audio device to use for output</string>
+    <string name="audio_device_reboot_message">Settings will be applied on the next boot</string>
     <!-- Sound settings screen, volume title -->
     <string name="all_volume_title">Volumes</string>
     <!-- Sound settings screen, music effects title [CHAR LIMIT=30]-->
@@ -3063,6 +3067,10 @@
     <!-- Setting checkbox title for Whether to enable USB debugging support on the phone. -->
     <!-- Error message for users that aren't allowed to modify developer options [CHAR LIMIT=none] -->
     <string name="development_settings_not_available">Developer options are not available for this user</string>
+    <!-- Setting checkbox title for Whether to enable external OTG port on the phone. -->
+    <string name="enable_external_otg">External OTG port enabled</string>
+    <!-- Setting checkbox summary for Whether to enable USB debugging support on the phone -->
+    <string name="enable_external_otg_summary">Enable external OTG port for allow USB debugging (Warning: enabling external OTG port will disconnect internal communication with Arduino)</string>    
     <string name="enable_adb">USB debugging</string>
     <!-- Setting checkbox summary for Whether to enable USB debugging support on the phone -->
     <string name="enable_adb_summary">Debug mode when USB is connected</string>
@@ -4009,6 +4017,11 @@
     <string name="show_cpu_usage">Show CPU usage</string>
     <!-- UI debug setting: show cpu usage summary [CHAR LIMIT=50] -->
     <string name="show_cpu_usage_summary">Screen overlay showing current CPU usage</string>
+
+    <!-- UI debug setting: show the current system time [CHAR LIMIT=25] -->
+    <string name="show_system_time">Show System Time</string>
+    <!-- UI debug setting: show system time summary [CHAR LIMIT=50] -->
+    <string name="show_system_time_summary">Screen overlay showing current system time</string>
 
     <!-- UI debug setting: force hardware acceleration to render apps [CHAR LIMIT=25] -->
     <string name="force_hw_ui">Force GPU rendering</string>

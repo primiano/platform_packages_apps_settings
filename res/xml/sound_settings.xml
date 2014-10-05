@@ -19,6 +19,14 @@
         android:key="sound_settings"
         xmlns:settings="http://schemas.android.com/apk/res/com.android.settings">
 
+    <ListPreference
+            android:key="audio_device"
+            android:title="@string/audio_device_title"
+            android:summary="@string/audio_device_title_summary"
+            android:persistent="false"
+            android:entries="@array/audio_device_entries"
+            android:entryValues="@array/audio_device_values" />
+            
     <com.android.settings.RingerVolumePreference
             android:key="ring_volume"
             android:title="@string/all_volume_title"

@@ -52,6 +52,11 @@
     <PreferenceCategory android:key="debug_debugging_category"
             android:title="@string/debug_debugging_category">
 
+	<CheckBoxPreference
+            android:key="enable_external_otg"
+            android:title="@string/enable_external_otg"
+            android:summary="@string/enable_external_otg_summary"/>
+            
         <CheckBoxPreference
             android:key="enable_adb"
             android:title="@string/enable_adb"
@@ -197,6 +202,11 @@
             android:key="show_cpu_usage"
             android:title="@string/show_cpu_usage"
             android:summary="@string/show_cpu_usage_summary"/>
+
+        <CheckBoxPreference
+                android:key="show_cpu_system_time"
+                android:title="@string/show_system_time"
+                android:summary="@string/show_system_time_summary"/>
 
         <ListPreference
             android:key="track_frame_time"

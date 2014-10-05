@@ -38,6 +38,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -47,6 +48,7 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -75,6 +77,7 @@ public class SoundSettings extends SettingsPreferenceFragment implements
     private static final String KEY_DOCK_AUDIO_SETTINGS = "dock_audio";
     private static final String KEY_DOCK_SOUNDS = "dock_sounds";
     private static final String KEY_DOCK_AUDIO_MEDIA_ENABLED = "dock_audio_media_enabled";
+    private static final String KEY_AUDIO_DEVICE = "audio_device";
 
     private static final String[] NEED_VOICE_CAPABILITY = {
             KEY_RINGTONE, KEY_DTMF_TONE, KEY_CATEGORY_CALLS,
@@ -92,6 +95,7 @@ public class SoundSettings extends SettingsPreferenceFragment implements
     private CheckBoxPreference mLockSounds;
     private Preference mRingtonePreference;
     private Preference mNotificationPreference;
+    private ListPreference mAudioDevicePref;
 
     private Runnable mRingtoneLookupRunnable;
 
@@ -101,6 +105,9 @@ public class SoundSettings extends SettingsPreferenceFragment implements
     private CheckBoxPreference mDockSounds;
     private Intent mDockIntent;
     private CheckBoxPreference mDockAudioMediaEnabled;
+
+    private static final String SETTINGS_AUDIO_DEVICE = "persist.audio.device";
+    private String audioDevice;
 
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
@@ -135,6 +142,11 @@ public class SoundSettings extends SettingsPreferenceFragment implements
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         addPreferencesFromResource(R.xml.sound_settings);
+
+	audioDevice = SystemProperties.get(SETTINGS_AUDIO_DEVICE, "imx-hdmi-soc");
+	mAudioDevicePref = (ListPreference) findPreference(KEY_AUDIO_DEVICE);
+	mAudioDevicePref.setValue(audioDevice);
+        mAudioDevicePref.setOnPreferenceChangeListener(this);
 
         if (TelephonyManager.PHONE_TYPE_CDMA != activePhoneType) {
             // device is not CDMA, do not display CDMA emergency_tone
@@ -351,6 +363,18 @@ public class SoundSettings extends SettingsPreferenceFragment implements
                 Log.e(TAG, "could not persist emergency tone setting", e);
             }
         }
+	else if (KEY_AUDIO_DEVICE.equals(key)) {
+	    String newAudioDevice = (String) objValue;
+	    try {
+		if(!audioDevice.equals(newAudioDevice)) {
+		    SystemProperties.set(SETTINGS_AUDIO_DEVICE, newAudioDevice);
+		    audioDevice = newAudioDevice;
+		    Toast.makeText(getActivity(), R.string.audio_device_reboot_message, Toast.LENGTH_SHORT).show();
+		}
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "could not persist audio device setting", e);
+            }
+	}
 
         return true;
     }

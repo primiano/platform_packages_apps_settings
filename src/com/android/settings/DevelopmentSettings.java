@@ -70,6 +70,11 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.DataOutputStream;
+import java.io.DataInputStream;
 
 /*
  * Displays preferences for application developers.
@@ -89,6 +94,7 @@ public class DevelopmentSettings extends PreferenceFragment
      */
     public static final String PREF_SHOW = "show";
 
+    private static final String ENABLE_EXTERNAL_OTG = "enable_external_otg";
     private static final String ENABLE_ADB = "enable_adb";
     private static final String CLEAR_ADB_KEYS = "clear_adb_keys";
     private static final String KEEP_SCREEN_ON = "keep_screen_on";
@@ -112,6 +118,7 @@ public class DevelopmentSettings extends PreferenceFragment
     private static final String SHOW_SCREEN_UPDATES_KEY = "show_screen_updates";
     private static final String DISABLE_OVERLAYS_KEY = "disable_overlays";
     private static final String SHOW_CPU_USAGE_KEY = "show_cpu_usage";
+    private static final String SHOW_SYSTEM_TIME_KEY = "show_cpu_system_time";
     private static final String FORCE_HARDWARE_UI_KEY = "force_hw_ui";
     private static final String FORCE_MSAA_KEY = "force_msaa";
     private static final String TRACK_FRAME_TIME_KEY = "track_frame_time";
@@ -152,6 +159,7 @@ public class DevelopmentSettings extends PreferenceFragment
     private boolean mHaveDebugSettings;
     private boolean mDontPokeProperties;
 
+    private CheckBoxPreference mEnableExtOTG;
     private CheckBoxPreference mEnableAdb;
     private Preference mClearAdbKeys;
     private Preference mBugreport;
@@ -172,6 +180,7 @@ public class DevelopmentSettings extends PreferenceFragment
     private CheckBoxPreference mShowScreenUpdates;
     private CheckBoxPreference mDisableOverlays;
     private CheckBoxPreference mShowCpuUsage;
+    private CheckBoxPreference mShowSystemTime;
     private CheckBoxPreference mForceHardwareUi;
     private CheckBoxPreference mForceMsaa;
     private CheckBoxPreference mShowHwScreenUpdates;
@@ -223,6 +232,7 @@ public class DevelopmentSettings extends PreferenceFragment
 
         addPreferencesFromResource(R.xml.development_prefs);
 
+	mEnableExtOTG = findAndInitCheckboxPref(ENABLE_EXTERNAL_OTG);
         mEnableAdb = findAndInitCheckboxPref(ENABLE_ADB);
         mClearAdbKeys = findPreference(CLEAR_ADB_KEYS);
         if (!SystemProperties.getBoolean("ro.adb.secure", false)) {
@@ -266,6 +276,7 @@ public class DevelopmentSettings extends PreferenceFragment
         mShowScreenUpdates = findAndInitCheckboxPref(SHOW_SCREEN_UPDATES_KEY);
         mDisableOverlays = findAndInitCheckboxPref(DISABLE_OVERLAYS_KEY);
         mShowCpuUsage = findAndInitCheckboxPref(SHOW_CPU_USAGE_KEY);
+        mShowSystemTime = findAndInitCheckboxPref(SHOW_SYSTEM_TIME_KEY);
         mForceHardwareUi = findAndInitCheckboxPref(FORCE_HARDWARE_UI_KEY);
         mForceMsaa = findAndInitCheckboxPref(FORCE_MSAA_KEY);
         mTrackFrameTime = addListPreference(TRACK_FRAME_TIME_KEY);
@@ -458,6 +469,7 @@ public class DevelopmentSettings extends PreferenceFragment
         updateShowTouchesOptions();
         updateFlingerOptions();
         updateCpuUsageOptions();
+        updateSystemTimeOptions();
         updateHardwareUiOptions();
         updateMsaaOptions();
         updateTrackFrameTimeOptions();
@@ -845,14 +857,37 @@ public class DevelopmentSettings extends PreferenceFragment
     private void updateCpuUsageOptions() {
         updateCheckBox(mShowCpuUsage, Settings.Global.getInt(getActivity().getContentResolver(),
                 Settings.Global.SHOW_PROCESSES, 0) != 0);
+        Log.i(TAG, "updateCpuUsageOptions:" + Settings.Global.getInt(getActivity().getContentResolver(),
+                Settings.Global.SHOW_PROCESSES, 0));
     }
-    
+	
+    private void updateSystemTimeOptions() {
+        updateCheckBox(mShowSystemTime, Settings.Global.getInt(getActivity().getContentResolver(),
+                Settings.Global.SHOW_SYSTEM_TIME, 0) != 0);
+        Log.i(TAG, "updateSystemTimeOptions:" + Settings.Global.getInt(getActivity().getContentResolver(),
+                Settings.Global.SHOW_PROCESSES, 0));
+    }
+
     private void writeCpuUsageOptions() {
         boolean value = mShowCpuUsage.isChecked();
         Settings.Global.putInt(getActivity().getContentResolver(),
                 Settings.Global.SHOW_PROCESSES, value ? 1 : 0);
         Intent service = (new Intent())
                 .setClassName("com.android.systemui", "com.android.systemui.LoadAverageService");
+        if (value) {
+            getActivity().startService(service);
+        } else {
+            getActivity().stopService(service);
+        }
+    }
+
+    private void writeSystemTimeOptions(){
+       boolean value = mShowSystemTime.isChecked();
+       Log.i(TAG, "writeSystemTimeOptions: " + value);
+       Settings.Global.putInt(getActivity().getContentResolver(),
+               Settings.Global.SHOW_SYSTEM_TIME, value ? 1 : 0);
+       Intent service = (new Intent())
+                .setClassName("com.android.systemui", "com.android.systemui.LoadSystemTime");
         if (value) {
             getActivity().startService(service);
         } else {
@@ -1061,7 +1096,13 @@ public class DevelopmentSettings extends PreferenceFragment
             return false;
         }
 
-        if (preference == mEnableAdb) {
+        if (preference == mEnableExtOTG) {
+	    String commandLine = "/system/bin/setotg ";
+	    commandLine += mEnableExtOTG.isChecked() ? "ext" : "int";
+	    if (executeCommandLine(commandLine) == false) {
+		    mEnableExtOTG.setChecked(!mEnableExtOTG.isChecked());
+	    }
+        } else if (preference == mEnableAdb) {
             if (mEnableAdb.isChecked()) {
                 mDialogClicked = false;
                 if (mAdbDialog != null) dismissDialogs();
@@ -1124,6 +1165,8 @@ public class DevelopmentSettings extends PreferenceFragment
             writeDisableOverlaysOption();
         } else if (preference == mShowCpuUsage) {
             writeCpuUsageOptions();
+        } else if (preference == mShowSystemTime){
+            writeSystemTimeOptions();
         } else if (preference == mImmediatelyDestroyActivities) {
             writeImmediatelyDestroyActivitiesOptions();
         } else if (preference == mShowAllANRs) {
@@ -1342,5 +1385,38 @@ public class DevelopmentSettings extends PreferenceFragment
         } catch (RemoteException e) {
             throw new RuntimeException("Problem talking with PackageManager", e);
         }
+    }
+
+    private boolean executeCommandLine(String commandLine)
+    {
+	boolean retval = false;
+
+	try {
+            Process process = Runtime.getRuntime().exec(commandLine);            
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuffer output = new StringBuffer();
+            char[] buffer = new char[4096];
+            int read;
+
+            while ((read = reader.read(buffer)) > 0) {
+                output.append(buffer, 0, read);
+            }
+
+            reader.close();
+
+            process.waitFor();
+
+            Log.d("executeCommandLine", output.toString());
+
+	    retval = (process.exitValue() == 0) ? true : false;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to execute '"+commandLine+"'", e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Unable to execute '"+commandLine+"'", e);
+        }
+
+	return retval;
     }
 }

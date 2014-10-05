@@ -159,6 +159,19 @@
         <item>1.30</item>
     </string-array>
 
+    <!-- Audio settings -->
+
+    <!-- Default audio device choices -->
+    <string-array name="audio_device_entries">
+        <item>HDMI</item>
+        <item>OnBoard</item>
+    </string-array>
+
+    <string-array name="audio_device_values">
+        <item>imx-hdmi-soc</item>
+        <item>vt1613-audio</item>
+    </string-array>
+    
     <!-- TTS settings -->
 
     <!-- Default speech rate choices -->
